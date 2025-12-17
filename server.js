@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const rateLimit = require("express-rate-limit");
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 
-require("dotenv").config(); // Read environment variables
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,30 +12,31 @@ const countries = require("./data/countries.json");
 
 // ======= MIDDLEWARES =======
 
-// Enable CORS
 app.use(cors());
 app.use(express.json());
 
-// Rate limiting: max 10 requests per minute per IP
-const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10,
-  message: { error: "Too many requests, please try again later" },
-});
-app.use(limiter);
-
-// API Key authentication
-// Set API key(s) in Render as environment variable: API_KEYS
-// Example: key1,key2,key3
-const validKeys = process.env.API_KEYS ? process.env.API_KEYS.split(",") : [];
-
+// 🔑 Allow ONLY RapidAPI requests
 app.use((req, res, next) => {
-  const key = req.headers["x-api-key"];
-  if (!key || !validKeys.includes(key)) {
-    return res.status(401).json({ error: "Unauthorized. Invalid API key." });
+  const rapidApiKey = req.headers["x-rapidapi-key"];
+  const rapidApiHost = req.headers["x-rapidapi-host"];
+
+  if (!rapidApiKey || !rapidApiHost) {
+    return res.status(401).json({
+      error: "Unauthorized..",
+    });
   }
   next();
 });
+
+// 🚦 Safety rate limiting (IPv4 + IPv6 SAFE)
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // safety limit
+  keyGenerator: (req) => req.headers["x-rapidapi-key"] || ipKeyGenerator(req),
+  message: { error: "Too many requests, please try again later" },
+});
+
+app.use(limiter);
 
 // ======= COUNTRY ENDPOINT =======
 app.get("/country", (req, res) => {
@@ -73,5 +74,5 @@ app.get("/country", (req, res) => {
 
 // ======= START SERVER =======
 app.listen(PORT, () => {
-  console.log(`✅ Country API running at http://localhost:${PORT}`);
+  console.log(`✅ Country API running on port ${PORT}`);
 });

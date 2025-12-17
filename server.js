@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 
   if (!rapidApiKey || !rapidApiHost) {
     return res.status(401).json({
-      error: "Unauthorized request. Must come via RapidAPI.",
+      error: "Unauthorized request. ",
     });
   }
   next();

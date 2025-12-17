@@ -15,19 +15,6 @@ const countries = require("./data/countries.json");
 app.use(cors());
 app.use(express.json());
 
-// 🔑 Allow ONLY RapidAPI requests
-app.use((req, res, next) => {
-  const rapidApiKey = req.headers["x-rapidapi-key"];
-  const rapidApiHost = req.headers["x-rapidapi-host"];
-
-  if (!rapidApiKey || !rapidApiHost) {
-    return res.status(401).json({
-      error: "Unauthorized..",
-    });
-  }
-  next();
-});
-
 // 🚦 Safety rate limiting (IPv4 + IPv6 SAFE)
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -37,6 +24,19 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+
+// 🔑 Allow ONLY RapidAPI requests
+app.use((req, res, next) => {
+  const rapidApiKey = req.headers["x-rapidapi-key"];
+  const rapidApiHost = req.headers["x-rapidapi-host"];
+
+  if (!rapidApiKey || !rapidApiHost) {
+    return res.status(401).json({
+      error: "Unauthorized request. Must come via RapidAPI.",
+    });
+  }
+  next();
+});
 
 // ======= COUNTRY ENDPOINT =======
 app.get("/country", (req, res) => {
@@ -70,6 +70,17 @@ app.get("/country", (req, res) => {
     continent: country.region,
     timeZones: country.timezones,
   });
+});
+
+// ======= CATCH-ALL 404 FOR INVALID ROUTES =======
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// ======= GLOBAL ERROR HANDLER (optional) =======
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 // ======= START SERVER =======

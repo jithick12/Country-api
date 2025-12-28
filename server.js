@@ -15,9 +15,8 @@ app.use(express.json());
 // 🔐 Allow ONLY RapidAPI traffic
 app.use((req, res, next) => {
   const rapidApiKey = req.headers["x-rapidapi-key"];
-  const rapidApiHost = req.headers["x-rapidapi-host"];
 
-  if (!rapidApiKey || !rapidApiHost) {
+  if (!rapidApiKey) {
     return res.status(401).json({
       error: "Unauthorized. This API is available only via RapidAPI.",
     });

@@ -11,19 +11,7 @@ const countries = require("./data/countries.json");
 // ======= MIDDLEWARE =======
 app.use(cors());
 app.use(express.json());
-
-// 🔐 Allow ONLY RapidAPI traffic
-app.use((req, res, next) => {
-  const rapidApiKey = req.headers["x-rapidapi-key"];
-
-  if (!rapidApiKey) {
-    return res.status(401).json({
-      error: "Unauthorized. This API is available only via RapidAPI.",
-    });
-  }
-
-  next();
-});
+app.disable("x-powered-by");
 
 // ======= COUNTRY ENDPOINT =======
 app.get("/country", (req, res) => {

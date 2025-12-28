@@ -1,40 +1,28 @@
 const express = require("express");
 const cors = require("cors");
-const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
-
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Load all countries from local JSON
+// Load all countries
 const countries = require("./data/countries.json");
 
-// ======= MIDDLEWARES =======
-
+// ======= MIDDLEWARE =======
 app.use(cors());
 app.use(express.json());
 
-// 🚦 Safety rate limiting (IPv4 + IPv6 SAFE)
-const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 60, // safety limit
-  keyGenerator: (req) => req.headers["x-rapidapi-key"] || ipKeyGenerator(req),
-  message: { error: "Too many requests, please try again later" },
-});
-
-app.use(limiter);
-
-// 🔑 Allow ONLY RapidAPI requests
+// 🔐 Allow ONLY RapidAPI traffic
 app.use((req, res, next) => {
   const rapidApiKey = req.headers["x-rapidapi-key"];
   const rapidApiHost = req.headers["x-rapidapi-host"];
 
-  // if (!rapidApiKey || !rapidApiHost) {
-  //   return res.status(401).json({
-  //     error: "Unauthorized request. ",
-  //   });
-  // }
+  if (!rapidApiKey || !rapidApiHost) {
+    return res.status(401).json({
+      error: "Unauthorized. This API is available only via RapidAPI.",
+    });
+  }
+
   next();
 });
 
@@ -72,14 +60,14 @@ app.get("/country", (req, res) => {
   });
 });
 
-// ======= CATCH-ALL 404 FOR INVALID ROUTES =======
+// ======= 404 HANDLER =======
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// ======= GLOBAL ERROR HANDLER (optional) =======
+// ======= ERROR HANDLER =======
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error(err);
   res.status(500).json({ error: "Internal server error" });
 });
 

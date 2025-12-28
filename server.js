@@ -30,11 +30,11 @@ app.use((req, res, next) => {
   const rapidApiKey = req.headers["x-rapidapi-key"];
   const rapidApiHost = req.headers["x-rapidapi-host"];
 
-  if (!rapidApiKey || !rapidApiHost) {
-    return res.status(401).json({
-      error: "Unauthorized request. ",
-    });
-  }
+  // if (!rapidApiKey || !rapidApiHost) {
+  //   return res.status(401).json({
+  //     error: "Unauthorized request. ",
+  //   });
+  // }
   next();
 });
 
